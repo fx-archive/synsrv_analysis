@@ -20,6 +20,8 @@ from brian2.units import mV, ms, second
 from pypet.trajectory import Trajectory
 from pypet.brian2.parameter import Brian2Parameter, Brian2MonitorResult
 
+from multiprocessing import Pool
+
 from plot_methods import raster_plot, voltage_traces, isi_distribution, \
                          conductance_mult_trace, firing_rate_distribution_exc, \
                          firing_rate_distribution_inh, synapse_active_trace, \
@@ -38,9 +40,32 @@ from plot_methods import raster_plot, voltage_traces, isi_distribution, \
                          print_netw_params, print_stdp_params, \
                          synapse_deathtime_distribution
 
-    
 
-def default_analysis_figure(tr, crun='run_00000000'):
+
+def load_trajectory(fname):
+    
+    tr = Trajectory(name='tr1',
+                    add_time=False, 
+                    filename=fname,
+                    dynamic_imports=[Brian2MonitorResult, Brian2Parameter])
+
+    # pypet.pypetconstants.LOAD_NOTHING  --> 0
+    # pypet.pypetconstants.LOAD_SKELETON --> 1
+    # pypet.pypetconstants.LOAD_DATA     --> 2
+    tr.f_load(load_parameters=2, load_derived_parameters=2, load_results=1)
+    tr.v_auto_load = True
+
+    return tr
+
+
+
+def default_analysis_figure(idx):
+
+    global fname, ftitle
+    
+    tr = load_trajectory(fname)
+    tr.v_idx = idx
+    crun = tr.v_crun
     
     pl.close()
     fig = pl.figure()
@@ -53,8 +78,6 @@ def default_analysis_figure(tr, crun='run_00000000'):
     axs = {}
     for x,y in itertools.product(range(ax_lines),range(ax_cols)):
         axs['%d,%d'%(x+1,y+1)] = pl.subplot2grid((ax_lines, ax_cols), (x, y))
-
-    assert(tr.v_crun == crun)
 
     midT = int(tr.T/tr.dt/2)
 
@@ -129,50 +152,20 @@ def default_analysis_figure(tr, crun='run_00000000'):
                dpi=100, bbox_inches='tight')
 
 
-if __name__ == "__main__":
-    # tr.v_idx = 6
-    # crun = tr.v_crun
-    # default_analysis_figure(tr,crun)
-
-    fname = sys.argv[1]
-    ftitle = os.path.basename(os.path.splitext(fname)[0])
-
-    tr = Trajectory(name='tr1',
-                    add_time=False, 
-                    filename=fname,
-                    dynamic_imports=[Brian2MonitorResult, Brian2Parameter])
-
-    # pypet.pypetconstants.LOAD_NOTHING  --> 0
-    # pypet.pypetconstants.LOAD_SKELETON --> 1
-    # pypet.pypetconstants.LOAD_DATA     --> 2
-    tr.f_load(load_parameters=2, load_derived_parameters=2, load_results=1)
-    tr.v_auto_load = True
 
     
-    for crun in tr.f_iter_runs():
-        # if tr.v_idx==1:
-            # break
-        default_analysis_figure(tr, crun)
-        # if tr.v_idx==6:
+if __name__ == "__main__":
 
-        #     default_analysis_figure(tr, crun)
+    fname, n_pool = sys.argv[1], int(sys.argv[2])
+    ftitle = os.path.basename(os.path.splitext(fname)[0])
+    
+    tr = load_trajectory(fname)
+    num_runs = len(list(tr.f_iter_runs()))
 
-             # pl.close()
-             # fig = pl.figure()
+    pool = Pool(n_pool)
+    pool.map(default_analysis_figure, range(num_runs))
+    pool.close()
+    pool.join()
 
-             # # ----- 3x4 -----
-             # s = 150
-             # fig.set_size_inches(1920/s*5/4,1080/s*7/3)
-
-             # ax_lines, ax_cols = 7,5
-             # axs = {}
-             # for x,y in itertools.product(range(ax_lines),range(ax_cols)):
-             #     axs['%d,%d'%(x+1,y+1)] = pl.subplot2grid((ax_lines, ax_cols), (x, y))
-
-             # x = isi_distribution(axs['1,4'], tr, crun=crun, tmin=0,tmax=2000)
-                
-            
-
-        # df_e, df_i = tr.crun.GExc_spks, tr.crun.GInh_spks
-        # print(tr.Aplus, df_e['num_spikes'], df_i['num_spikes'])
+    
         
