@@ -156,16 +156,23 @@ def default_analysis_figure(idx):
     
 if __name__ == "__main__":
 
-    fname, n_pool = sys.argv[1], int(sys.argv[2])
+    fname, n_pool, run_pool = sys.argv[1], int(sys.argv[2]), bool(int(sys.argv[3]))
     ftitle = os.path.basename(os.path.splitext(fname)[0])
-    
+
     tr = load_trajectory(fname)
     num_runs = len(list(tr.f_iter_runs()))
 
-    pool = Pool(n_pool)
-    pool.map(default_analysis_figure, range(num_runs))
-    pool.close()
-    pool.join()
+    if run_pool:
+        print("Using pool")
+        
+        pool = Pool(n_pool)
+        pool.map(default_analysis_figure, range(num_runs))
+        pool.close()
+        pool.join()
 
+    else:
+        print("Not using multiprocessing.")
+        for idx in range(num_runs):
+            default_analysis_figure(idx)
     
         
