@@ -79,6 +79,12 @@ def firing_rate_distribution_exc(ax, tr, crun='run_00000000', steps=25):
         ax.set_xlabel('firing rate [Hz]')
         ax.set_ylabel('counts')
 
+        ax.spines['right'].set_visible(False)
+        ax.spines['top'].set_visible(False)
+        ax.yaxis.set_ticks_position('left')
+        ax.xaxis.set_ticks_position('bottom')
+
+
 def firing_rate_distribution_inh(ax, tr, crun='run_00000000', steps=25):
     df_i = tr.crun.GInh_spks
     try:
@@ -93,6 +99,12 @@ def firing_rate_distribution_inh(ax, tr, crun='run_00000000', steps=25):
     ax.set_title('Firing Rate Distribution (Inh.)')
     ax.set_xlabel('firing rate [Hz]')
     ax.set_ylabel('counts')
+
+    ax.spines['right'].set_visible(False)
+    ax.spines['top'].set_visible(False)
+    ax.yaxis.set_ticks_position('left')
+    ax.xaxis.set_ticks_position('bottom')
+
 
 
 def voltage_traces(ax, tr, crun='run_00000000', tmin=0.*second, tmax=-1.*second):
@@ -120,6 +132,12 @@ def voltage_traces(ax, tr, crun='run_00000000', tmin=0.*second, tmax=-1.*second)
         ax.set_xlabel('time [s]')
         ax.set_ylabel('voltage [mV]')
 
+        ax.spines['right'].set_visible(False)
+        ax.spines['top'].set_visible(False)
+        ax.yaxis.set_ticks_position('left')
+        ax.xaxis.set_ticks_position('bottom')
+        
+
         
 def isi_distribution(ax, tr, crun='run_00000000', bins=25):
     df_e, df_i = tr.crun.GExc_spks, tr.crun.GInh_spks
@@ -133,6 +151,11 @@ def isi_distribution(ax, tr, crun='run_00000000', bins=25):
     ax.set_title('ISI Distribution (Exc.)')
     ax.set_xlabel('interspike interval [ms]')
     ax.set_ylabel('counts')
+
+    ax.spines['right'].set_visible(False)
+    ax.spines['top'].set_visible(False)
+    ax.yaxis.set_ticks_position('left')
+    ax.xaxis.set_ticks_position('bottom')
 
 
     # try:
@@ -196,16 +219,25 @@ def synapse_weight_distribution(ax, tr, crun='run_00000000', bins=50):
         ax.hist(np.nan_to_num(df.a[:,i].flatten()), bins=bins)
     ax.set_title('Synaptic Weight Distribution')
 
-def synapse_weight_distribution_t(ax, tr, crun='run_00000000', bins=25, tstep=0):
+def synapse_weight_distribution_t(ax, tr, crun='run_00000000', bins=25, tstep=0, low_bound=-1):
     df = tr.crun.SynEE_a
 
-    data = df.a[:,tstep]
-    data = data[data>tr.prn_thrshld]
-    try:
-        amax = np.max(data)
-    except ValueError:
-        amax = 4*tr.a_insert
-    ax.hist(data, bins=np.linspace(tr.prn_thrshld, 4*tr.a_insert, bins))
+    data = df['a'][:,tstep]
+    data = data[df['syn_active'][:,tstep]==1]
+
+    if low_bound!=-1:
+        data = data[data>low_bound]
+    
+    print('max: ', np.max(data), '\t min: ', np.min(data))
+    # data = data[data>tr.prn_thrshld]
+
+    # try:
+    #     amax = np.max(data)
+    # except ValueError:
+    #     amax = 4*tr.a_insert
+    # ax.hist(data, bins=np.linspace(tr.prn_thrshld, 4*tr.a_insert, bins))
+
+    ax.hist(data, bins=bins)
     
     ax.text(0.50, 0.95,
             r'$a_{\text{max}}$='+'%.2E' % Decimal(tr.amax) + '\n' + \
@@ -216,8 +248,9 @@ def synapse_weight_distribution_t(ax, tr, crun='run_00000000', bins=25, tstep=0)
             bbox={'boxstyle': 'square, pad=0.3', 'facecolor':'white',
                   'alpha':1, 'edgecolor':'none'},
             transform = ax.transAxes)
-    ax.axvline(tr.a_insert, color='red')
-    ax.axvline(tr.prn_thrshld, color='red')
+            
+    # ax.axvline(tr.a_insert, color='red')
+    # ax.axvline(tr.prn_thrshld, color='red')
 
     text, textcol = 'inactive', 'red'
     if bool(tr.scl_active):
@@ -234,32 +267,89 @@ def synapse_weight_distribution_t(ax, tr, crun='run_00000000', bins=25, tstep=0)
     ax.set_title('SynEE Weights at t=\SI{'+ \
                  str(df.t[tstep])+'}{s}')
 
+    ax.spines['right'].set_visible(False)
+    ax.spines['top'].set_visible(False)
+    ax.yaxis.set_ticks_position('left')
+    ax.xaxis.set_ticks_position('bottom')
+
+
 def synapse_weight_distribution_log_t(ax, tr, crun='run_00000000',
-                                      bins=30, a_min=-1, a_max=-1, tstep=-1):
+                                      bins=30, a_min=-1, a_max=-1,
+                                      tstep=-1, low_bound = -1):
 
     df = tr.crun.SynEE_a
-    a_vals = df['a'][:,tstep]
-    a_cut = a_vals[a_vals>tr.prn_thrshld]
+    data = df['a'][:,tstep]
+    a_vals = data[df['syn_active'][:,tstep]==1]
 
-    if a_min==-1:
-        a_min = tr.prn_thrshld
-    if a_max==-1:
-        try:
-            a_max = np.max(a_cut)
-        except ValueError:
-            a_max = 1
+    a_cut = a_vals[a_vals>0]
+
+    if low_bound!=-1:
+        a_cut = a_cut[a_cut>low_bound]
+
+    # if a_min==-1:
+    #     a_min = tr.prn_thrshld
+    # if a_max==-1:
+    #     try:
+    #         a_max = np.max(a_cut)
+    #     except ValueError:
+    #         a_max = 1
+
+    a_min = np.min(a_cut)
+    a_max = np.max(a_cut)
 
     ax.hist(a_cut, 10**np.linspace(np.log10(a_min),
                                    np.log10(a_max),bins),
-            normed=True)
+            density=True)
 
     ax.set_xscale('log')
 
-    ax.axvline(tr.a_insert, color='red')
-    ax.axvline(tr.prn_thrshld, color='red')
+    # ax.axvline(tr.a_insert, color='red')
+    # ax.axvline(tr.prn_thrshld, color='red')
 
     ax.set_title('SynEE Weights at t=\SI{'+ \
                  str(df.t[tstep])+'}{s}')
+    
+    ax.spines['right'].set_visible(False)
+    ax.spines['top'].set_visible(False)
+    ax.yaxis.set_ticks_position('left')
+    ax.xaxis.set_ticks_position('bottom')
+
+def synapse_weight_distribution_loglog_t(ax, tr, crun='run_00000000',
+                                         bins=30, a_min=-1, a_max=-1,
+                                         tstep=-1, low_bound=-1):
+
+    df = tr.crun.SynEE_a
+    data = df['a'][:,tstep]
+    a_vals = data[df['syn_active'][:,tstep]==1]
+
+    a_cut = a_vals[a_vals>0]
+
+    if low_bound!=-1:
+        a_cut = a_cut[a_cut>low_bound]
+
+
+    a_min = np.min(a_cut)
+    a_max = np.max(a_cut)
+
+    ax.hist(a_cut, 10**np.linspace(np.log10(a_min),
+                                   np.log10(a_max),bins),
+            density=True)
+
+    ax.set_xscale('log')
+    ax.set_yscale('log')
+
+    # ax.axvline(tr.a_insert, color='red')
+    # ax.axvline(tr.prn_thrshld, color='red')
+
+    ax.set_title('SynEE Weights at t=\SI{'+ \
+                 str(df.t[tstep])+'}{s}')
+    
+    ax.spines['right'].set_visible(False)
+    ax.spines['top'].set_visible(False)
+    ax.yaxis.set_ticks_position('left')
+    ax.xaxis.set_ticks_position('bottom')
+
+
 
 def synapse_weight_distribution_log_t_faulty(ax, tr, crun='run_00000000',
                                              bins=30, a_min=-1, a_max=-1,
@@ -299,7 +389,8 @@ def synapse_active_trace(ax, tr,  crun='run_00000000'):
     ax.set_title('active synapses')
     
     
-def synapse_weight_traces(ax, tr, crun='run_00000000', tmin=0*ms, tmax=-1*ms):
+def synapse_weight_traces(ax, tr, crun='run_00000000', tmin=0*ms, tmax=-1*ms,
+                          plot_thresholds=False):
 
     if tmax==-1*ms:
         tmax = tr.T
@@ -323,12 +414,19 @@ def synapse_weight_traces(ax, tr, crun='run_00000000', tmin=0*ms, tmax=-1*ms):
                   'alpha':1, 'edgecolor':'none'},
             transform = ax.transAxes)
 
-        ax.axhline(tr.a_insert, linestyle='dashed', color='grey')
-        ax.axhline(tr.prn_thrshld, linestyle='dashed', color='grey')
-        ax.axhline(tr.amax, color='red')
+        if plot_thresholds:
+            ax.axhline(tr.a_insert, linestyle='dashed', color='grey')
+            ax.axhline(tr.prn_thrshld, linestyle='dashed', color='grey')
+            ax.axhline(tr.amax, color='red')
 
         ax.set_title('Synaptic Weight Traces')
         ax.set_xlabel('time [s]')
+
+        ax.spines['right'].set_visible(False)
+        ax.spines['top'].set_visible(False)
+        ax.yaxis.set_ticks_position('left')
+        ax.xaxis.set_ticks_position('bottom')
+
 
         
 def synapse_lifetime_distribution(ax, tr, crun='run_00000000', discard_t=0.):
@@ -646,8 +744,8 @@ def print_stdp_params(ax, tr, crun='run_00000000'):
     ax.text(0.0, 1.0,
             r'$\tau'+'_{\mathrm{pre}}$= \SI{%.2f}{ms}' %(tr.taupre/ms) +\
             r', $\tau'+'_{\mathrm{post}}$= \SI{%.2f}{ms}' %(tr.taupost/ms) +\
-            '\n $A_{\mathrm{plus}}$= $%.2f\, a_{\mathrm{scale}}$' %(tr.Aplus/tr.ascale) + \
-            ', $A_{\mathrm{minus}}$= $%.2f\, a_{\mathrm{scale}}$' %(tr.Aminus/tr.ascale) + \
+            '\n $A_{\mathrm{plus}}$= $%f\, a_{\mathrm{scale}}$' %(tr.Aplus/tr.ascale) + \
+            '\n $A_{\mathrm{minus}}$= $%f\, a_{\mathrm{scale}}$' %(tr.Aminus/tr.ascale) + \
             '\n $a_{\mathrm{scale}}$ = %.4E' %(Decimal(tr.ascale)) +\
             '\n------------------------------------------' +\
             '\n $a_{\mathrm{TotalMax}}$ = $%.4f \, a_{\mathrm{scale}}$' %(tr.ATotalMax/tr.ascale) +\
@@ -664,3 +762,7 @@ def print_stdp_params(ax, tr, crun='run_00000000'):
             bbox={'boxstyle': 'square, pad=0.3', 'facecolor':'white',
                   'alpha':1, 'edgecolor':'none'},
             transform = ax.transAxes)
+
+
+def ax_off(ax):
+    ax.axis('off')
