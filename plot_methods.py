@@ -3,6 +3,7 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as pl
 
 import numpy as np
+from scipy.stats import lognorm
 from decimal import Decimal
 
 from brian2.units import mV, ms, second
@@ -275,7 +276,9 @@ def synapse_weight_distribution_t(ax, tr, crun='run_00000000', bins=25, tstep=0,
 
 def synapse_weight_distribution_log_t(ax, tr, crun='run_00000000',
                                       bins=30, a_min=-1, a_max=-1,
-                                      tstep=-1, low_bound = -1):
+                                      tstep=-1, low_bound = -1,
+                                      fit=False, fit_adapt_ylim=True,
+                                      ax_text=True):
 
     df = tr.crun.SynEE_a
     data = df['a'][:,tstep]
@@ -297,17 +300,41 @@ def synapse_weight_distribution_log_t(ax, tr, crun='run_00000000',
     a_min = np.min(a_cut)
     a_max = np.max(a_cut)
 
-    ax.hist(a_cut, 10**np.linspace(np.log10(a_min),
-                                   np.log10(a_max),bins),
-            density=True)
+    val, bins, _ = ax.hist(a_cut, 10**np.linspace(np.log10(a_min),
+                                              np.log10(a_max),bins),
+                           density=True)
+
+    if fit:
+        fs, floc, fscale = lognorm.fit(a_cut)
+        f_rv = lognorm(fs, loc=floc, scale=fscale)
+        xs = np.logspace(start=np.log10(a_min),
+                         stop=np.log10(a_max),
+                         base=10., num=5000)
+        ax.plot(xs, f_rv.pdf(xs))
+
+        if fit_adapt_ylim:
+            ax.set_ylim(0, 1.2*np.max(val))
+        
 
     ax.set_xscale('log')
 
     # ax.axvline(tr.a_insert, color='red')
     # ax.axvline(tr.prn_thrshld, color='red')
 
-    ax.set_title('SynEE Weights at t=\SI{'+ \
+    ax.set_title('E-E weights at t=\SI{'+ \
                  str(df.t[tstep])+'}{s}')
+
+    if ax_text:
+        
+        ax.text(1.0, 0.875,
+                r'view thrs '+'%.2E' % Decimal(low_bound/tr.ATotalMax) + \
+                r'$\, a_{\mathrm{TotalMax}}$',
+                horizontalalignment='right',
+                verticalalignment='top',
+                bbox={'boxstyle': 'square, pad=0.3', 'facecolor':'white',
+                      'alpha':1, 'edgecolor':'none'},
+                transform = ax.transAxes)
+
     
     ax.spines['right'].set_visible(False)
     ax.spines['top'].set_visible(False)
