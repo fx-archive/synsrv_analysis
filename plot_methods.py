@@ -12,6 +12,9 @@ from post_processing import extract_lifetimes, extract_active_synapse_count, \
                             extract_delta_a_on_spike
 
 
+def ax_off(ax):
+    ax.axis('off')
+
 def raster_plot(ax, tr, crun='run_00000000', tmin=0.*second, tmax=-1.*second):
     if tmax == -1.*second:
         tmax=tr.T
@@ -711,15 +714,20 @@ def membrane_threshold_traces(ax, tr, crun='run_00000000', tmax=-1):
     if df == []:
         pass
 
-    else:
-    
+    try:
         for i in df.record:
             ax.plot(df.t[:tmax]/ms, df.Vt[i,:tmax]/mV)
         ax.ticklabel_format(useOffset=False)
+
         ax.set_title('Mem. Threshold Traces')
         ax.set_xlabel('time [ms]')
         ax.set_ylabel('voltage [mV]')
 
+    except AttributeError:
+        ax.axis('off')      
+    
+   
+    
         
 def print_membrane_params(ax, tr, crun='run_00000000'):
     ax.axis('off')
@@ -791,5 +799,3 @@ def print_stdp_params(ax, tr, crun='run_00000000'):
             transform = ax.transAxes)
 
 
-def ax_off(ax):
-    ax.axis('off')
