@@ -39,7 +39,9 @@ from plot_methods import raster_plot, voltage_traces, isi_distribution, \
                          synapse_weight_change_on_spike_loglog, \
                          print_netw_params, print_stdp_params, \
                          synapse_deathtime_distribution, ax_off, \
-                         synapse_weight_distribution_loglog_t
+                         synapse_weight_distribution_loglog_t, \
+                         view_thrshld_ax_text
+
 
 
 
@@ -82,91 +84,102 @@ def lognorm_analysis_figure(idx):
 
     midT = int(tr.T/tr.dt/2)
 
+    fit=True
+
     synapse_weight_distribution_log_t(axs['1,1'], tr, crun, tstep=1, bins=50)
     synapse_weight_distribution_log_t(axs['1,2'], tr, crun, tstep=2, bins=50)
     synapse_weight_distribution_log_t(axs['1,3'], tr, crun, tstep=3, bins=50)
     synapse_weight_distribution_log_t(axs['1,4'], tr, crun, tstep=4, bins=50)
     synapse_weight_distribution_log_t(axs['1,5'], tr, crun, tstep=5, bins=50)
     synapse_weight_distribution_log_t(axs['1,6'], tr, crun, tstep=6, bins=50)
-    synapse_weight_distribution_log_t(axs['1,7'], tr, crun, tstep=-1, bins=50)
+    synapse_weight_distribution_log_t(axs['1,7'], tr, crun, tstep=-1, bins=50,
+                                      ax_text = True)
 
-    fit=True
+    low_bound = 0.00000000000000001*tr.ATotalMax
     synapse_weight_distribution_log_t(axs['2,1'], tr, crun, tstep=1, bins=50,
-                                      low_bound=0.00000000000000001*tr.ATotalMax, fit=fit)
+                                      low_bound=low_bound, fit=fit)
     synapse_weight_distribution_log_t(axs['2,2'], tr, crun, tstep=2, bins=50,
-                                      low_bound=0.00000000000000001*tr.ATotalMax, fit=fit)
+                                      low_bound=low_bound, fit=fit)
     synapse_weight_distribution_log_t(axs['2,3'], tr, crun, tstep=3, bins=50,
-                                      low_bound=0.00000000000000001*tr.ATotalMax, fit=fit)
+                                      low_bound=low_bound, fit=fit)
     synapse_weight_distribution_log_t(axs['2,4'], tr, crun, tstep=4, bins=50,
-                                      low_bound=0.00000000000000001*tr.ATotalMax, fit=fit)
+                                      low_bound=low_bound, fit=fit)
     synapse_weight_distribution_log_t(axs['2,5'], tr, crun, tstep=5, bins=50,
-                                      low_bound=0.00000000000000001*tr.ATotalMax, fit=fit)
+                                      low_bound=low_bound, fit=fit)
     synapse_weight_distribution_log_t(axs['2,6'], tr, crun, tstep=6, bins=50,
-                                      low_bound=0.00000000000000001*tr.ATotalMax, fit=fit)
+                                      low_bound=low_bound, fit=fit)
     synapse_weight_distribution_log_t(axs['2,7'], tr, crun, tstep=-1, bins=50,
-                                      low_bound=0.00000000000000001*tr.ATotalMax, fit=fit)
+                                      low_bound=low_bound, fit=fit,
+                                      ax_text = True)
 
+    low_bound = 0.00000000001*tr.ATotalMax
     synapse_weight_distribution_log_t(axs['3,1'], tr, crun, tstep=1, bins=50,
-                                      low_bound=0.00000000001*tr.ATotalMax, fit=fit)
+                                      low_bound=low_bound, fit=fit)
     synapse_weight_distribution_log_t(axs['3,2'], tr, crun, tstep=2, bins=50,
-                                      low_bound=0.00000000001*tr.ATotalMax, fit=fit)
+                                      low_bound=low_bound, fit=fit)
     synapse_weight_distribution_log_t(axs['3,3'], tr, crun, tstep=3, bins=50,
-                                      low_bound=0.00000000001*tr.ATotalMax, fit=fit)
+                                      low_bound=low_bound, fit=fit)
     synapse_weight_distribution_log_t(axs['3,4'], tr, crun, tstep=4, bins=50,
-                                      low_bound=0.00000000001*tr.ATotalMax, fit=fit)
+                                      low_bound=low_bound, fit=fit)
     synapse_weight_distribution_log_t(axs['3,5'], tr, crun, tstep=5, bins=50,
-                                      low_bound=0.00000000001*tr.ATotalMax, fit=fit)
+                                      low_bound=low_bound, fit=fit)
     synapse_weight_distribution_log_t(axs['3,6'], tr, crun, tstep=6, bins=50,
-                                      low_bound=0.00000000001*tr.ATotalMax, fit=fit)
+                                      low_bound=low_bound, fit=fit)
     synapse_weight_distribution_log_t(axs['3,7'], tr, crun, tstep=-1, bins=50,
-                                      low_bound=0.00000000001*tr.ATotalMax, fit=fit)
+                                      low_bound=low_bound, fit=fit)
+    view_thrshld_ax_text(axs['3,8'], tr, low_bound=low_bound)
     
-
+    low_bound = 0.00000001*tr.ATotalMax
     synapse_weight_distribution_log_t(axs['4,1'], tr, crun, tstep=1, bins=50,
-                                      low_bound=0.00000001*tr.ATotalMax, fit=fit)
+                                      low_bound=low_bound, fit=fit)
     synapse_weight_distribution_log_t(axs['4,2'], tr, crun, tstep=2, bins=50,
-                                      low_bound=0.00000001*tr.ATotalMax, fit=fit)
+                                      low_bound=low_bound, fit=fit)
     synapse_weight_distribution_log_t(axs['4,3'], tr, crun, tstep=3, bins=50,
-                                      low_bound=0.00000001*tr.ATotalMax, fit=fit)
+                                      low_bound=low_bound, fit=fit)
     synapse_weight_distribution_log_t(axs['4,4'], tr, crun, tstep=4, bins=50,
-                                      low_bound=0.00000001*tr.ATotalMax, fit=fit)
+                                      low_bound=low_bound, fit=fit)
     synapse_weight_distribution_log_t(axs['4,5'], tr, crun, tstep=5, bins=50,
-                                      low_bound=0.00000001*tr.ATotalMax, fit=fit)
+                                      low_bound=low_bound, fit=fit)
     synapse_weight_distribution_log_t(axs['4,6'], tr, crun, tstep=6, bins=50,
-                                      low_bound=0.00000001*tr.ATotalMax, fit=fit)
+                                      low_bound=low_bound, fit=fit)
     synapse_weight_distribution_log_t(axs['4,7'], tr, crun, tstep=-1, bins=50,
-                                      low_bound=0.00000001*tr.ATotalMax, fit=fit)
+                                      low_bound=low_bound, fit=fit)
+    view_thrshld_ax_text(axs['4,8'], tr, low_bound=low_bound)
 
+    low_bound = 0.00001*tr.ATotalMax
     synapse_weight_distribution_log_t(axs['5,1'], tr, crun, tstep=1, bins=50,
-                                      low_bound=0.00001*tr.ATotalMax, fit=fit)
+                                      low_bound=low_bound, fit=fit)
     synapse_weight_distribution_log_t(axs['5,2'], tr, crun, tstep=2, bins=50,
-                                      low_bound=0.00001*tr.ATotalMax, fit=fit)
+                                      low_bound=low_bound, fit=fit)
     synapse_weight_distribution_log_t(axs['5,3'], tr, crun, tstep=3, bins=50,
-                                      low_bound=0.00001*tr.ATotalMax, fit=fit)
+                                      low_bound=low_bound, fit=fit)
     synapse_weight_distribution_log_t(axs['5,4'], tr, crun, tstep=4, bins=50,
-                                      low_bound=0.00001*tr.ATotalMax, fit=fit)
+                                      low_bound=low_bound, fit=fit)
     synapse_weight_distribution_log_t(axs['5,5'], tr, crun, tstep=5, bins=50,
-                                      low_bound=0.00001*tr.ATotalMax, fit=fit)
+                                      low_bound=low_bound, fit=fit)
     synapse_weight_distribution_log_t(axs['5,6'], tr, crun, tstep=6, bins=50,
-                                      low_bound=0.00001*tr.ATotalMax, fit=fit)
+                                      low_bound=low_bound, fit=fit)
     synapse_weight_distribution_log_t(axs['5,7'], tr, crun, tstep=-1, bins=50,
-                                      low_bound=0.00001*tr.ATotalMax, fit=fit)
+                                      low_bound=low_bound, fit=fit)
+    view_thrshld_ax_text(axs['5,8'], tr, low_bound=low_bound)
 
+    
+    low_bound = 0.001*tr.ATotalMax
     synapse_weight_distribution_log_t(axs['6,1'], tr, crun, tstep=1, bins=50,
-                                      low_bound=0.001*tr.ATotalMax, fit=fit)
+                                      low_bound=low_bound, fit=fit)
     synapse_weight_distribution_log_t(axs['6,2'], tr, crun, tstep=2, bins=50,
-                                      low_bound=0.001*tr.ATotalMax, fit=fit)
+                                      low_bound=low_bound, fit=fit)
     synapse_weight_distribution_log_t(axs['6,3'], tr, crun, tstep=3, bins=50,
-                                      low_bound=0.001*tr.ATotalMax, fit=fit)
+                                      low_bound=low_bound, fit=fit)
     synapse_weight_distribution_log_t(axs['6,4'], tr, crun, tstep=4, bins=50,
-                                      low_bound=0.001*tr.ATotalMax, fit=fit)
+                                      low_bound=low_bound, fit=fit)
     synapse_weight_distribution_log_t(axs['6,5'], tr, crun, tstep=5, bins=50,
-                                      low_bound=0.001*tr.ATotalMax, fit=fit)
+                                      low_bound=low_bound, fit=fit)
     synapse_weight_distribution_log_t(axs['6,6'], tr, crun, tstep=6, bins=50,
-                                      low_bound=0.001*tr.ATotalMax, fit=fit)
+                                      low_bound=low_bound, fit=fit)
     synapse_weight_distribution_log_t(axs['6,7'], tr, crun, tstep=-1, bins=50,
-                                      low_bound=0.001*tr.ATotalMax, fit=fit)
-
+                                      low_bound=low_bound, fit=fit)
+    view_thrshld_ax_text(axs['6,8'], tr, low_bound=low_bound)
     
     print_netw_params(axs['1,8'], tr, crun)
     print_stdp_params(axs['2,8'], tr, crun)

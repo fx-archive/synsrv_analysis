@@ -281,7 +281,7 @@ def synapse_weight_distribution_log_t(ax, tr, crun='run_00000000',
                                       bins=30, a_min=-1, a_max=-1,
                                       tstep=-1, low_bound = -1,
                                       fit=False, fit_adapt_ylim=True,
-                                      ax_text=True):
+                                      ax_text=False, density=True):
 
     df = tr.crun.SynEE_a
     data = df['a'][:,tstep]
@@ -305,7 +305,7 @@ def synapse_weight_distribution_log_t(ax, tr, crun='run_00000000',
 
     val, bins, _ = ax.hist(a_cut, 10**np.linspace(np.log10(a_min),
                                               np.log10(a_max),bins),
-                           density=True)
+                           density=density)
 
     if fit:
         fs, floc, fscale = lognorm.fit(a_cut)
@@ -343,6 +343,33 @@ def synapse_weight_distribution_log_t(ax, tr, crun='run_00000000',
     ax.spines['top'].set_visible(False)
     ax.yaxis.set_ticks_position('left')
     ax.xaxis.set_ticks_position('bottom')
+
+def view_thrshld_ax_text(ax, tr, low_bound, tstep=-1):
+
+    df = tr.crun.SynEE_a
+    data = df['a'][:,tstep]
+    a_vals = data[df['syn_active'][:,tstep]==1]
+
+    a_zeroplus = a_vals[a_vals>0]
+
+    if low_bound!=-1:
+        a_cut = a_zeroplus[a_zeroplus>low_bound]
+
+    percent_shown = len(a_cut)/len(a_vals)
+    
+    ax.text(0.0, 0.75,
+            r'view thrs '+'%.2E' % Decimal(low_bound/tr.ATotalMax) + \
+            r'$\, a_{\mathrm{TotalMax}}$' + \
+            '\n'+'%f of weights shown' % percent_shown + \
+            '\n'+'%f above zero' % (len(a_zeroplus)/len(a_vals)),
+            horizontalalignment='left',
+            verticalalignment='top',
+            bbox={'boxstyle': 'square, pad=0.3', 'facecolor':'white',
+                  'alpha':1, 'edgecolor':'none'},
+            transform = ax.transAxes, fontsize=16)
+
+    ax.axis('off')      
+    
 
 def synapse_weight_distribution_loglog_t(ax, tr, crun='run_00000000',
                                          bins=30, a_min=-1, a_max=-1,
