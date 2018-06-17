@@ -308,8 +308,8 @@ def synapse_weight_distribution_log_t(ax, tr, crun='run_00000000',
                            density=density)
 
     if fit:
-        fs, floc, fscale = lognorm.fit(a_cut)
-        f_rv = lognorm(fs, loc=floc, scale=fscale)
+        fs, floc, fscale = lognorm.fit(a_cut, floc=0)
+        f_rv = lognorm(fs, loc=0, scale=fscale)
         xs = np.logspace(start=np.log10(a_min),
                          stop=np.log10(a_max),
                          base=10., num=5000)
