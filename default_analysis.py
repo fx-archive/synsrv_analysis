@@ -144,7 +144,7 @@ def default_analysis_figure(idx):
             
     pl.tight_layout()
 
-    directory = "analysis/default".format(ftitle)
+    directory = "figures/default_analysis".format(ftitle)
     if not os.path.exists(directory):
         os.makedirs(directory)
         
