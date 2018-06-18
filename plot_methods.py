@@ -41,10 +41,13 @@ def raster_plot(ax, tr, crun='run_00000000', tmin=0.*second, tmax=-1.*second):
             print(crun, " no inh. spikes")
 
         ax.set_ylim(0, tr.N_e + tr.N_i)
-        ax.set_title('T='+str(tr.T/second)+' s, ' +\
-                     '$\sigma$=$\sqrt{\mathrm{' +\
-                     '%.2E' % Decimal((tr.sigma/mV)**2)+'}}$ mV')
+        ax.set_title('T='+str(tr.T/second)+' s')
         ax.set_xlabel('time [s]')
+
+        ax.spines['right'].set_visible(False)
+        ax.spines['top'].set_visible(False)
+        ax.yaxis.set_ticks_position('left')
+        ax.xaxis.set_ticks_position('bottom')
 
         
 def firing_rate_distribution_exc(ax, tr, crun='run_00000000', steps=25):

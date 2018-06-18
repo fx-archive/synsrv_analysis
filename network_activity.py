@@ -38,7 +38,7 @@ from plot_methods import raster_plot, voltage_traces, isi_distribution, \
                          synapse_weight_change_on_spike_log, \
                          synapse_weight_change_on_spike_loglog, \
                          print_netw_params, print_stdp_params, \
-                         synapse_deathtime_distribution
+                         synapse_deathtime_distribution, ax_off
 
 
 
@@ -79,12 +79,17 @@ def default_analysis_figure(idx):
     for x,y in itertools.product(range(ax_lines),range(ax_cols)):
         axs['%d,%d'%(x+1,y+1)] = pl.subplot2grid((ax_lines, ax_cols), (x, y))
 
+    # for key,ax in axs.items():
+    #     # ax.axis('off')
+    #     print('hi')
+
     fig.set_size_inches(1920/s*5/4,1080/s*7/3)
 
         
     midT = int(tr.T/tr.dt/2)
 
     if tr.T/second > 2:
+        axs['1,1'].axis('normal')
         raster_plot(axs['1,1'], tr, crun, tmin=0*second, tmax=2*second)
         raster_plot(axs['1,2'], tr, crun, tmin=tr.T/2-1*second,
                     tmax=tr.T/2+1*second)
@@ -103,8 +108,10 @@ def default_analysis_figure(idx):
     firing_rate_distribution_inh(axs['3,2'], tr, crun, steps=15)
     isi_distribution(axs['3,3'], tr, crun, bins=50)
 
-    from network_activity_legend import netw_params_table
+    from network_activity_legend import netw_params_table, neuron_params_table, synapse_params_table
     netw_params_table(axs['1,4'], tr, crun)
+    neuron_params_table(axs['2,4'], tr, crun)
+    synapse_params_table(axs['3,4'], tr, crun)
 
 
 
@@ -113,7 +120,7 @@ def default_analysis_figure(idx):
     conductance_mult_trace(axs['4,2'], tr, crun, tmin=midT, tmax=midT+2000)
     conductance_mult_trace(axs['4,3'], tr, crun, tmin=-2001,tmax=-1)
 
-    print_stdp_params(axs['3,4'], tr, crun)
+    print_stdp_params(axs['4,4'], tr, crun)
     
     # synapse_weight_distribution_t(axs['4,1'], tr, crun, tstep=0)
     # synapse_weight_distribution_t(axs['4,2'], tr, crun, tstep=-1)
@@ -146,7 +153,17 @@ def default_analysis_figure(idx):
     # membrane_threshold_distribution_t(axs['7,3'], tr, crun, tstep=-1)
     # membrane_threshold_traces(axs['7,4'], tr, crun)
     print_membrane_params(axs['6,4'], tr, crun)
-            
+
+    ax_off(axs['5,1'])
+    ax_off(axs['5,2'])
+    ax_off(axs['5,3'])
+    ax_off(axs['5,4'])
+
+    ax_off(axs['6,1'])
+    ax_off(axs['6,2'])
+    ax_off(axs['6,3'])
+    # ax_off(axs['6,1'])
+    
     pl.tight_layout()
 
     directory = "figures/network_activity".format(ftitle)
