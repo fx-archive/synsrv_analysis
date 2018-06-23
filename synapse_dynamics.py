@@ -31,7 +31,7 @@ from axes.parameter_displays import  netw_params_display, \
                                      strct_params_display
 
 
-from methods.plot_synapse import weight_distribution_t
+from axes.synapse import weight_distribution_t
 
 from plot_methods import raster_plot, voltage_traces, isi_distribution, \
                          conductance_mult_trace, firing_rate_distribution_exc, \
