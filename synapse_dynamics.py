@@ -22,9 +22,11 @@ from pypet.trajectory import Trajectory
 from pypet.brian2.parameter import Brian2Parameter, Brian2MonitorResult
 from multiprocessing import Pool
 
-from network_activity_legend import netw_params_table, \
-                                    neuron_params_table, \
-                                    synapse_params_table
+
+from axes.parameter_displays import  netw_params_display, \
+                                     neuron_params_display, \
+                                     synapse_params_display, \
+                                     stdp_params_display
 
 from methods.plot_synapse import weight_distribution_t
 
@@ -106,9 +108,9 @@ def default_analysis_figure(idx):
     # firing_rate_distribution_inh(axs['3,2'], tr, crun, steps=15)
     # isi_distribution(axs['3,3'], tr, crun, bins=50)
 
-    netw_params_table(axs['1,4'], tr, crun)
-    neuron_params_table(axs['2,4'], tr, crun)
-    synapse_params_table(axs['3,4'], tr, crun)
+    netw_params_display(axs['1,4'], tr, crun)
+    neuron_params_display(axs['2,4'], tr, crun)
+    synapse_params_display(axs['3,4'], tr, crun)
 
 
 
@@ -117,7 +119,8 @@ def default_analysis_figure(idx):
     # conductance_mult_trace(axs['4,2'], tr, crun, tmin=midT, tmax=midT+2000)
     # conductance_mult_trace(axs['4,3'], tr, crun, tmin=-2001,tmax=-1)
 
-    print_stdp_params(axs['4,4'], tr, crun)
+    stdp_params_display(axs['4,4'], tr, crun)
+    print_stdp_params(axs['5,4'], tr, crun)
 
     #--------
     
@@ -166,7 +169,7 @@ def default_analysis_figure(idx):
     
     ax_off(axs['5,2'])
     ax_off(axs['5,3'])
-    ax_off(axs['5,4'])
+    # ax_off(axs['5,4'])
 
     ax_off(axs['6,1'])
     ax_off(axs['6,2'])
