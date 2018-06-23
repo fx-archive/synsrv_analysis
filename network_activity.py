@@ -22,6 +22,14 @@ from pypet.brian2.parameter import Brian2Parameter, Brian2MonitorResult
 
 from multiprocessing import Pool
 
+from axes.parameter_displays import  netw_params_display, \
+                                     neuron_params_display, \
+                                     synapse_params_display, \
+                                     stdp_params_display, \
+                                     sn_params_display, \
+                                     strct_params_display
+
+
 from plot_methods import raster_plot, voltage_traces, isi_distribution, \
                          conductance_mult_trace, firing_rate_distribution_exc, \
                          firing_rate_distribution_inh, synapse_active_trace, \
@@ -108,10 +116,14 @@ def default_analysis_figure(idx):
     firing_rate_distribution_inh(axs['3,2'], tr, crun, steps=15)
     isi_distribution(axs['3,3'], tr, crun, bins=50)
 
-    from network_activity_legend import netw_params_table, neuron_params_table, synapse_params_table
-    netw_params_table(axs['1,4'], tr, crun)
-    neuron_params_table(axs['2,4'], tr, crun)
-    synapse_params_table(axs['3,4'], tr, crun)
+
+    netw_params_display(axs['1,4'], tr, crun)
+    neuron_params_display(axs['2,4'], tr, crun)
+    synapse_params_display(axs['3,4'], tr, crun)
+    stdp_params_display(axs['4,4'], tr, crun)
+    sn_params_display(axs['5,4'], tr, crun)
+    strct_params_display(axs['6,4'], tr, crun)
+
 
 
     if tr.T/second > 2:
@@ -134,7 +146,7 @@ def default_analysis_figure(idx):
     # conductance_mult_trace(axs['4,2'], tr, crun, tmin=midT, tmax=midT+2000)
     # conductance_mult_trace(axs['4,3'], tr, crun, tmin=-2001,tmax=-1)
 
-    print_stdp_params(axs['4,4'], tr, crun)
+    # print_stdp_params(axs['4,4'], tr, crun)
     
     # synapse_weight_distribution_t(axs['4,1'], tr, crun, tstep=0)
     # synapse_weight_distribution_t(axs['4,2'], tr, crun, tstep=-1)
@@ -167,7 +179,7 @@ def default_analysis_figure(idx):
     # membrane_threshold_distribution_t(axs['7,3'], tr, crun, tstep=-1)
     # membrane_threshold_traces(axs['7,4'], tr, crun)
 
-    print_membrane_params(axs['6,4'], tr, crun)
+    # print_membrane_params(axs['6,4'], tr, crun)
 
 
     from correlation_plots import correlation_matrix
