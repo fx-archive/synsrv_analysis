@@ -1,7 +1,10 @@
 
-import argparse, sys, os, itertools, matplotlib
+import sys, os, itertools
+
+import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as pl
+
 from matplotlib import rc
 
 rc('text', usetex=True)
@@ -14,13 +17,16 @@ pl.rcParams['text.latex.preamble'] = [
 ]  
 
 import numpy as np
-
 from brian2.units import mV, ms, second
-
 from pypet.trajectory import Trajectory
 from pypet.brian2.parameter import Brian2Parameter, Brian2MonitorResult
-
 from multiprocessing import Pool
+
+from network_activity_legend import netw_params_table, \
+                                    neuron_params_table, \
+                                    synapse_params_table
+
+from methods.plot_synapse import weight_distribution_t
 
 from plot_methods import raster_plot, voltage_traces, isi_distribution, \
                          conductance_mult_trace, firing_rate_distribution_exc, \
@@ -29,14 +35,6 @@ from plot_methods import raster_plot, voltage_traces, isi_distribution, \
                          synapse_lifetime_distribution, Apre_traces, \
                          Apost_traces, membrane_threshold_distribution_t, \
                          membrane_threshold_traces, synapse_weight_traces, \
-                         synapse_lifetime_distribution_loglog, \
-                         synapse_lifetime_distribution_loglin, \
-                         synapse_lifetime_distribution_loglog_linbin, \
-                         synapse_weight_distribution_log_t, \
-                         synapse_weight_distribution_log_t_faulty, \
-                         synapse_weight_change_on_spike, \
-                         synapse_weight_change_on_spike_log, \
-                         synapse_weight_change_on_spike_loglog, \
                          print_netw_params, print_stdp_params, \
                          synapse_deathtime_distribution, ax_off
 
@@ -88,55 +86,44 @@ def default_analysis_figure(idx):
         
     midT = int(tr.T/tr.dt/2)
 
-    if tr.T/second > 2:
-        axs['1,1'].axis('normal')
-        raster_plot(axs['1,1'], tr, crun, tmin=0*second, tmax=2*second)
-        raster_plot(axs['1,2'], tr, crun, tmin=tr.T/2-1*second,
-                    tmax=tr.T/2+1*second)
-        raster_plot(axs['1,3'], tr, crun, tmin=tr.T-2*second, tmax=tr.T)
+    # if tr.T/second > 2:
+    #     axs['1,1'].axis('normal')
+    #     raster_plot(axs['1,1'], tr, crun, tmin=0*second, tmax=2*second)
+    #     raster_plot(axs['1,2'], tr, crun, tmin=tr.T/2-1*second,
+    #                 tmax=tr.T/2+1*second)
+    #     raster_plot(axs['1,3'], tr, crun, tmin=tr.T-2*second, tmax=tr.T)
 
-        voltage_traces(axs['2,1'], tr, crun, tmin=0*second, tmax=0.5*second)
-        voltage_traces(axs['2,2'], tr, crun, tmin=tr.T/2-0.25*second,
-                    tmax=tr.T/2+0.25*second)
-        voltage_traces(axs['2,3'], tr, crun, tmin=tr.T-0.25*second,
-                       tmax=tr.T)
-    else:
-        raster_plot(axs['1,1'], tr, crun)
-        voltage_traces(axs['2,1'], tr, crun)
+    #     voltage_traces(axs['2,1'], tr, crun, tmin=0*second, tmax=0.5*second)
+    #     voltage_traces(axs['2,2'], tr, crun, tmin=tr.T/2-0.25*second,
+    #                 tmax=tr.T/2+0.25*second)
+    #     voltage_traces(axs['2,3'], tr, crun, tmin=tr.T-0.25*second,
+    #                    tmax=tr.T)
+    # else:
+    #     raster_plot(axs['1,1'], tr, crun)
+    #     voltage_traces(axs['2,1'], tr, crun)
 
-    firing_rate_distribution_exc(axs['3,1'], tr, crun, steps=10)
-    firing_rate_distribution_inh(axs['3,2'], tr, crun, steps=15)
-    isi_distribution(axs['3,3'], tr, crun, bins=50)
+    # firing_rate_distribution_exc(axs['3,1'], tr, crun, steps=10)
+    # firing_rate_distribution_inh(axs['3,2'], tr, crun, steps=15)
+    # isi_distribution(axs['3,3'], tr, crun, bins=50)
 
-    from network_activity_legend import netw_params_table, neuron_params_table, synapse_params_table
     netw_params_table(axs['1,4'], tr, crun)
     neuron_params_table(axs['2,4'], tr, crun)
     synapse_params_table(axs['3,4'], tr, crun)
 
 
-    if tr.T/second > 2:
 
-        conductance_mult_trace(axs['4,1'], tr, crun, tmin=0*second,tmax=2000)
-        raster_plot(axs['1,2'], tr, crun, tmin=tr.T/2-1*second,
-                    tmax=tr.T/2+1*second)
-        raster_plot(axs['1,3'], tr, crun, tmin=tr.T-2*second, tmax=tr.T)
-
-        voltage_traces(axs['2,1'], tr, crun, tmin=0*second, tmax=0.5*second)
-        voltage_traces(axs['2,2'], tr, crun, tmin=tr.T/2-0.25*second,
-                    tmax=tr.T/2+0.25*second)
-        voltage_traces(axs['2,3'], tr, crun, tmin=tr.T-0.25*second,
-                       tmax=tr.T)
-    else:
-        raster_plot(axs['1,1'], tr, crun)
-        voltage_traces(axs['2,1'], tr, crun)
-
+    # conductance_mult_trace(axs['4,1'], tr, crun, tmin=0,tmax=2000)
 
     # conductance_mult_trace(axs['4,2'], tr, crun, tmin=midT, tmax=midT+2000)
     # conductance_mult_trace(axs['4,3'], tr, crun, tmin=-2001,tmax=-1)
 
     print_stdp_params(axs['4,4'], tr, crun)
+
+    #--------
     
-    # synapse_weight_distribution_t(axs['4,1'], tr, crun, tstep=0)
+    weight_distribution_t(axs['4,1'], tr, crun, tstep=1)
+    weight_distribution_t(axs['4,2'], tr, crun, tstep=3)
+    weight_distribution_t(axs['4,3'], tr, crun, tstep=-1)
     # synapse_weight_distribution_t(axs['4,2'], tr, crun, tstep=-1)
     # synapse_weight_distribution_log_t(axs['4,3'], tr, crun, bins=30,
     #                                  tstep=-1)
@@ -152,7 +139,7 @@ def default_analysis_figure(idx):
     # synapse_lifetime_distribution_loglog(axs['5,5'], tr, crun)
 
 
-    # synapse_weight_traces(axs['6,1'], tr, crun)
+    synapse_weight_traces(axs['1,1'], tr, crun)
     # synapse_weight_traces(axs['7,1'], tr, crun, tmin=tr.T-1*second, tmax=tr.T)
     # synapse_weight_change_on_spike(axs['6,2'], tr, crun)
     # synapse_weight_change_on_spike_log(axs['6,3'], tr, crun)
@@ -167,11 +154,15 @@ def default_analysis_figure(idx):
     # membrane_threshold_distribution_t(axs['7,3'], tr, crun, tstep=-1)
     # membrane_threshold_traces(axs['7,4'], tr, crun)
 
-    print_membrane_params(axs['6,4'], tr, crun)
 
 
-    from correlation_plots import correlation_matrix
-    correlation_matrix(fig, axs['5,1'], tr, crun)
+    # ------
+    
+    # print_membrane_params(axs['6,4'], tr, crun)
+
+
+    # from correlation_plots import correlation_matrix
+    # correlation_matrix(fig, axs['5,1'], tr, crun)
     
     ax_off(axs['5,2'])
     ax_off(axs['5,3'])
@@ -184,7 +175,7 @@ def default_analysis_figure(idx):
     
     pl.tight_layout()
 
-    directory = "figures/network_activity".format(ftitle)
+    directory = "figures/synapse_dynamics".format(ftitle)
     if not os.path.exists(directory):
         os.makedirs(directory)
         
@@ -198,10 +189,6 @@ if __name__ == "__main__":
 
     fname, n_pool, run_pool = sys.argv[1], int(sys.argv[2]), bool(int(sys.argv[3]))
     ftitle = os.path.basename(os.path.splitext(fname)[0])
-
-    # check for flags such as --onlyzero
-    # parser = argparse.ArgumentParser()
-    # parser.add_argument('--onlyzero',  
 
     tr = load_trajectory(fname)
     num_runs = len(list(tr.f_iter_runs()))
@@ -221,6 +208,8 @@ if __name__ == "__main__":
             #     tr = load_trajectory(fname)
             #     tr.v_idx = idx
             #     crun = tr.v_crun
+                
+            #     df = tr.crun.SynEE_a
             #     xx=tr.crun.sEE_src
             #     yy=tr.crun.sEE_tar
 

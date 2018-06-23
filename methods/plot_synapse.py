@@ -1,242 +1,40 @@
-import matplotlib, math
-matplotlib.use('Agg')
-import matplotlib.pyplot as pl
 
 import numpy as np
 from scipy.stats import lognorm
-from decimal import Decimal
+#from decimal import Decimal
 
 from brian2.units import mV, ms, second
 
-from post_processing import extract_lifetimes, extract_active_synapse_count, \
-                            extract_delta_a_on_spike
+
+# def synapse_weight_distribution(ax, tr, crun='run_00000000', bins=50):
+#     df = tr.crun.SynEE_a
+#     bins = np.linspace(0, tr.amax, num=bins)
+#     for i,t in enumerate(df.t):
+#         ax.hist(np.nan_to_num(df.a[:,i].flatten()), bins=bins)
+#     ax.set_title('Synaptic Weight Distribution')
 
 
-def ax_off(ax):
-    ax.axis('off')
+def weight_distribution_t(ax, tr, crun='run_00000000', bins=50,
+                          tstep=0, low_bound=-1):
 
-def raster_plot(ax, tr, crun='run_00000000', tmin=0.*second, tmax=-1.*second):
-    if tmax == -1.*second:
-        tmax=tr.T
-        
-    df_e, df_i = tr.crun.GExc_spks, tr.crun.GInh_spks
-    
-    if (df_e == []) or (df_i == []):
-        pass
-    
-    else:
-        
-        try:
-            indx = np.logical_and(df_e.t/ms>tmin/ms, df_e.t/ms<tmax/ms)
-            ax.plot(df_e.t[indx]/second, df_e.i[indx], marker='.',
-                    color='blue', markersize=.5, linestyle='None')
-        except AttributeError:
-            print(crun, " no exc. spikes")
-            
-        try:
-            indx = np.logical_and(df_i.t/ms>tmin/ms, df_i.t/ms<tmax/ms)
-            ax.plot(df_i.t[indx]/second, df_i.i[indx]+tr.N_e, marker='.',
-                    color='red', markersize=.5, linestyle='None')
-        except AttributeError:
-            print(crun, " no inh. spikes")
-
-        ax.set_ylim(0, tr.N_e + tr.N_i)
-        ax.set_title('T='+str(tr.T/second)+' s')
-        ax.set_xlabel('time [s]')
-
-        ax.spines['right'].set_visible(False)
-        ax.spines['top'].set_visible(False)
-        ax.yaxis.set_ticks_position('left')
-        ax.xaxis.set_ticks_position('bottom')
-
-        
-def firing_rate_distribution_exc(ax, tr, crun='run_00000000', steps=25):
-
-    df_e = tr.crun.GExc_spks
-
-    if df_e == []:
-        pass
-    
-    else:
-    
-        try:
-            spk_counts = np.bincount(df_e.i)
-            delta_spk = math.ceil(0.05*(np.max(spk_counts)-np.min(spk_counts)))
-            bins = np.linspace(np.min(spk_counts)-delta_spk,
-                             np.max(spk_counts)+delta_spk,
-                             steps)/tr.T/second
-            ax.hist(spk_counts/tr.T/second, bins=bins, color='blue')
-        except AttributeError:
-            print(crun, " no exc. spikes")
-            
-        text, textcol = 'inactive', 'red'
-
-        if bool(tr.it_active):
-            text, textcol = 'active','green'
-
-        ax.text(0.02, 0.95,
-                'it ' + text, color=textcol,
-                horizontalalignment='left',
-                verticalalignment='top',
-                bbox={'boxstyle': 'square, pad=0.3', 'facecolor':'white',
-                      'alpha':1, 'edgecolor':'none'},
-                transform = ax.transAxes)        
-
-        ax.set_title('Firing Rate Distribution (Exc.)')
-        ax.set_xlabel('firing rate [Hz]')
-        ax.set_ylabel('counts')
-
-        ax.spines['right'].set_visible(False)
-        ax.spines['top'].set_visible(False)
-        ax.yaxis.set_ticks_position('left')
-        ax.xaxis.set_ticks_position('bottom')
-
-
-def firing_rate_distribution_inh(ax, tr, crun='run_00000000', steps=25):
-    df_i = tr.crun.GInh_spks
-    try:
-        spk_counts = np.bincount(df_i.i)
-        delta_spk = math.ceil(0.05*(np.max(spk_counts)-np.min(spk_counts)))
-        bins = np.linspace(np.min(spk_counts)-delta_spk,
-                         np.max(spk_counts)+delta_spk,
-                           steps)/tr.T/second
-        ax.hist(spk_counts/(tr.T/second), bins=bins, color='red')
-    except AttributeError:
-        print(crun, " no inh. spikes")
-    ax.set_title('Firing Rate Distribution (Inh.)')
-    ax.set_xlabel('firing rate [Hz]')
-    ax.set_ylabel('counts')
-
-    ax.spines['right'].set_visible(False)
-    ax.spines['top'].set_visible(False)
-    ax.yaxis.set_ticks_position('left')
-    ax.xaxis.set_ticks_position('bottom')
-
-
-
-def voltage_traces(ax, tr, crun='run_00000000', tmin=0.*second, tmax=-1.*second):
-    
-    if tmax == -1.*second:
-        tmax=tr.T
-
-    df = tr.crun.GExc_stat
-
-    if df == []:
-        pass
-    
-    else:
-    
-        print("Assuming t in second. It's not clear why df.t doesn't",
-              "\ncarry units and this should be fixed eventually!")
-
-        indx = np.logical_and(df.t>tmin/second, df.t<tmax/second)
-
-        for i in df.record:
-            ax.plot(df.t[indx]/second, df.V[i,:][indx]/mV)
-
-        ax.set_ylim(tr.Vr_e/mV-5, tr.Vt_e/mV+5)
-        ax.set_title('Membrane Voltage Traces')
-        ax.set_xlabel('time [s]')
-        ax.set_ylabel('voltage [mV]')
-
-        ax.spines['right'].set_visible(False)
-        ax.spines['top'].set_visible(False)
-        ax.yaxis.set_ticks_position('left')
-        ax.xaxis.set_ticks_position('bottom')
-        
-
-        
-def isi_distribution(ax, tr, crun='run_00000000', bins=25):
-    df_e, df_i = tr.crun.GExc_spks, tr.crun.GInh_spks
-    exc_isi = []
-    try:
-        for k in range(tr.N_e):
-            exc_isi += list(np.diff(df_e.t[df_e.i==k])/ms)
-        ax.hist(exc_isi, bins=bins)
-    except AttributeError:
-        print(crun, " no exc. spikes")
-    ax.set_title('ISI Distribution (Exc.)')
-    ax.set_xlabel('interspike interval [ms]')
-    ax.set_ylabel('counts')
-
-    ax.spines['right'].set_visible(False)
-    ax.spines['top'].set_visible(False)
-    ax.yaxis.set_ticks_position('left')
-    ax.xaxis.set_ticks_position('bottom')
-
-
-    # try:
-    #     spk_counts = np.bincount(df_e.i)
-    #     delta_spk = math.ceil(0.1*(np.max(spk_counts)-np.min(spk_counts)))
-    #     bins = np.arange(np.min(spk_counts)-delta_spk,
-    #                      np.max(spk_counts)+step+delta_spk,
-    #                      step)/tr.T/second
-    #     ax.hist(spk_counts/tr.T/second, bins=bins, color='blue')
-    # except AttributeError:
-    #     print(crun, " no exc. spikes")
-    # ax.set_title('Firing Rate Distribution (Exc.)')
-    # ax.set_xlabel('firing rate [Hz]')
-    # ax.set_ylabel('counts')
-    #return df_e
-
-def conductance_traces(ax, tr, crun='run_00000000', tmin=0, tmax=-1):
-    df = tr.crun.GExc_stat 
-    for i in df.record:
-        if i==2:
-            ax.plot(df.t[tmin:tmax]/ms, df.ge[i,tmin:tmax])
-            ax.plot(df.t[tmin:tmax]/ms, df.gi[i,tmin:tmax])
-    #ax.set_ylim(tr.Vr_e/mV-5, tr.Vt_e/mV+5)
-    ax.set_title('Conductance Traces')
-    ax.set_xlabel('time [ms]')
-    ax.set_ylabel('conductance')
-
-    
-def conductance_mult_trace(ax, tr, crun='run_00000000', tmin=0, tmax=-1):
-
-    df = tr.crun.GExc_stat
-
-    if df == []:
-        pass
-    
-    else:
-    
-        ge_max, gi_min = [],[]
-
-        for i in df.record:
-            gi_min.append(1.1*np.min(df.gi[i,tmin:tmax]))
-            ax.plot(df.t[tmin:tmax]/ms,
-                    np.sum(ge_max)-np.sum(gi_min)+df.ge[i,tmin:tmax],
-                    color='blue')
-            ax.plot(df.t[tmin:tmax]/ms,
-                    np.sum(ge_max)-np.sum(gi_min)+df.gi[i,tmin:tmax],
-                    color='red')
-
-            ge_max.append(1.1*np.max(df.ge[i,tmin:tmax]))
-
-        ax.spines['top'].set_visible(False)
-        ax.spines['right'].set_visible(False)
-        ax.set_title('Conductance Traces')
-        ax.set_xlabel('time [ms]')
-        ax.set_ylabel('conductance')
-    
-
-def synapse_weight_distribution(ax, tr, crun='run_00000000', bins=50):
-    df = tr.crun.SynEE_a
-    bins = np.linspace(0, tr.amax, num=bins)
-    for i,t in enumerate(df.t):
-        ax.hist(np.nan_to_num(df.a[:,i].flatten()), bins=bins)
-    ax.set_title('Synaptic Weight Distribution')
-
-def synapse_weight_distribution_t(ax, tr, crun='run_00000000', bins=25, tstep=0, low_bound=-1):
     df = tr.crun.SynEE_a
 
-    data = df['a'][:,tstep]
-    data = data[df['syn_active'][:,tstep]==1]
+    weight_at_t = df['a'][:,tstep]
+    states_at_t = df['syn_active'][:,tstep]
 
-    if low_bound!=-1:
-        data = data[data>low_bound]
+    active_weight_at_t = weight_at_t[states_at_t==1]
+
+    # data = df['a'][:,tstep]
+    # xdata = data
+    # print(xdata)
+    # data = data[df['syn_active'][:,tstep]==1]
+
+    # print(data)
+
+    # if low_bound!=-1:
+    #     data = data[data>low_bound]
     
-    print('max: ', np.max(data), '\t min: ', np.min(data))
+    # print('max: ', np.max(data), '\t min: ', np.min(data))
     # data = data[data>tr.prn_thrshld]
 
     # try:
@@ -245,34 +43,34 @@ def synapse_weight_distribution_t(ax, tr, crun='run_00000000', bins=25, tstep=0,
     #     amax = 4*tr.a_insert
     # ax.hist(data, bins=np.linspace(tr.prn_thrshld, 4*tr.a_insert, bins))
 
-    ax.hist(data, bins=bins)
+    ax.hist(active_weight_at_t, bins=bins)
     
-    ax.text(0.50, 0.95,
-            r'$a_{\text{max}}$='+'%.2E' % Decimal(tr.amax) + '\n' + \
-            'prn=' + '%.2E' % Decimal(tr.prn_thrshld) +'\n' +\
-            'ins=' + '%.2E' % Decimal(tr.a_insert),
-            horizontalalignment='left',
-            verticalalignment='top',
-            bbox={'boxstyle': 'square, pad=0.3', 'facecolor':'white',
-                  'alpha':1, 'edgecolor':'none'},
-            transform = ax.transAxes)
+    # ax.text(0.50, 0.95,
+    #         r'$a_{\text{max}}$='+'%.2E' % Decimal(tr.amax) + '\n' + \
+    #         'prn=' + '%.2E' % Decimal(tr.prn_thrshld) +'\n' +\
+    #         'ins=' + '%.2E' % Decimal(tr.a_insert),
+    #         horizontalalignment='left',
+    #         verticalalignment='top',
+    #         bbox={'boxstyle': 'square, pad=0.3', 'facecolor':'white',
+    #               'alpha':1, 'edgecolor':'none'},
+    #         transform = ax.transAxes)
             
     # ax.axvline(tr.a_insert, color='red')
     # ax.axvline(tr.prn_thrshld, color='red')
 
-    text, textcol = 'inactive', 'red'
-    if bool(tr.scl_active):
-        text, textcol = 'active', 'green'
-    if tstep==0:
-        ax.text(0.02, 0.95,
-                'scl ' + text, color=textcol, 
-                horizontalalignment='left',
-                verticalalignment='top',
-                bbox={'boxstyle': 'square, pad=0.3', 'facecolor':'white',
-                      'alpha':1, 'edgecolor':'none'},
-                transform = ax.transAxes)        
+    # text, textcol = 'inactive', 'red'
+    # if bool(tr.scl_active):
+    #     text, textcol = 'active', 'green'
+    # if tstep==0:
+    #     ax.text(0.02, 0.95,
+    #             'scl ' + text, color=textcol, 
+    #             horizontalalignment='left',
+    #             verticalalignment='top',
+    #             bbox={'boxstyle': 'square, pad=0.3', 'facecolor':'white',
+    #                   'alpha':1, 'edgecolor':'none'},
+    #             transform = ax.transAxes)        
 
-    ax.set_title('SynEE Weights at t=\SI{'+ \
+    ax.set_title('synEE Weights at t=\SI{'+ \
                  str(df.t[tstep])+'}{s}')
 
     ax.spines['right'].set_visible(False)
