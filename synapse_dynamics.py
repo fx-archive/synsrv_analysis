@@ -26,7 +26,9 @@ from multiprocessing import Pool
 from axes.parameter_displays import  netw_params_display, \
                                      neuron_params_display, \
                                      synapse_params_display, \
-                                     stdp_params_display
+                                     stdp_params_display, \
+                                     sn_params_display
+
 
 from methods.plot_synapse import weight_distribution_t
 
@@ -120,7 +122,8 @@ def default_analysis_figure(idx):
     # conductance_mult_trace(axs['4,3'], tr, crun, tmin=-2001,tmax=-1)
 
     stdp_params_display(axs['4,4'], tr, crun)
-    print_stdp_params(axs['5,4'], tr, crun)
+    sn_params_display(axs['5,4'], tr, crun)
+    print_stdp_params(axs['6,4'], tr, crun)
 
     #--------
     
