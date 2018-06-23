@@ -22,6 +22,8 @@ from pypet.brian2.parameter import Brian2Parameter, Brian2MonitorResult
 
 from multiprocessing import Pool
 
+from axes.neuron import conductance_mult_trace
+
 from axes.parameter_displays import  netw_params_display, \
                                      neuron_params_display, \
                                      synapse_params_display, \
@@ -31,7 +33,7 @@ from axes.parameter_displays import  netw_params_display, \
 
 
 from plot_methods import raster_plot, voltage_traces, isi_distribution, \
-                         conductance_mult_trace, firing_rate_distribution_exc, \
+                         firing_rate_distribution_exc, \
                          firing_rate_distribution_inh, synapse_active_trace, \
                          synapse_weight_distribution_t, print_membrane_params, \
                          synapse_lifetime_distribution, Apre_traces, \
@@ -125,23 +127,19 @@ def default_analysis_figure(idx):
     strct_params_display(axs['6,4'], tr, crun)
 
 
+    dt = 500*ms
+    if tr.T > dt:
 
-    if tr.T/second > 2:
+        conductance_mult_trace(axs['4,1'], tr, crun, tmin=0*second,
+                                                     tmax=dt)
+        conductance_mult_trace(axs['4,2'], tr, crun, tmin=tr.T/2-dt/2,
+                                                     tmax=tr.T/2+dt/2)
+        conductance_mult_trace(axs['4,3'], tr, crun, tmin=tr.T-dt,
+                                                     tmax=tr.T)
 
-        conductance_mult_trace(axs['4,1'], tr, crun, tmin=0*second,tmax=2000)
-        raster_plot(axs['1,2'], tr, crun, tmin=tr.T/2-1*second,
-                    tmax=tr.T/2+1*second)
-        raster_plot(axs['1,3'], tr, crun, tmin=tr.T-2*second, tmax=tr.T)
-
-        voltage_traces(axs['2,1'], tr, crun, tmin=0*second, tmax=0.5*second)
-        voltage_traces(axs['2,2'], tr, crun, tmin=tr.T/2-0.25*second,
-                    tmax=tr.T/2+0.25*second)
-        voltage_traces(axs['2,3'], tr, crun, tmin=tr.T-0.25*second,
-                       tmax=tr.T)
     else:
-        raster_plot(axs['1,1'], tr, crun)
-        voltage_traces(axs['2,1'], tr, crun)
-
+        conductance_mult_trace(axs['4,1'], tr, crun)
+        
 
     # conductance_mult_trace(axs['4,2'], tr, crun, tmin=midT, tmax=midT+2000)
     # conductance_mult_trace(axs['4,3'], tr, crun, tmin=-2001,tmax=-1)
