@@ -31,7 +31,9 @@ from axes.parameter_displays import  netw_params_display, \
                                      strct_params_display
 
 
-from axes.synapse import weight_distribution_t
+from axes.synapse import n_active_synapses, \
+                         weight_distribution_t, \
+                         weight_distribution_log_t
 
 from plot_methods import raster_plot, voltage_traces, isi_distribution, \
                          conductance_mult_trace, firing_rate_distribution_exc, \
@@ -89,21 +91,16 @@ def default_analysis_figure(idx):
     fig.set_size_inches(1920/s*5/4,1080/s*7/3)
 
     synapse_weight_traces(axs['1,1'], tr, crun)
+    n_active_synapses(axs['1,2'], tr, crun)
             
     weight_distribution_t(axs['2,1'], tr, crun, tstep=1)
     weight_distribution_t(axs['2,2'], tr, crun, tstep=3)
     weight_distribution_t(axs['2,3'], tr, crun, tstep=-1)
 
+    weight_distribution_log_t(axs['3,1'], tr, crun, tstep=1)
+    weight_distribution_log_t(axs['3,2'], tr, crun, tstep=3)
+    weight_distribution_log_t(axs['3,3'], tr, crun, tstep=-1)
 
-
-    
-    # synapse_weight_distribution_t(axs['4,2'], tr, crun, tstep=-1)
-    # synapse_weight_distribution_log_t(axs['4,3'], tr, crun, bins=30,
-    #                                  tstep=-1)
-    # synapse_weight_distribution_log_t(axs['4,4'], tr, crun, bins=30,
-    #                                   a_min=tr.a_insert, tstep=-1)    
-    # synapse_weight_distribution_log_t_faulty(axs['4,5'], tr, crun, bins=30)
-        
     
     # synapse_active_trace(axs['5,1'], tr, crun)
     # synapse_deathtime_distribution(axs['5,2'], tr, crun)
@@ -176,7 +173,7 @@ if __name__ == "__main__":
     else:
         print("Not using multiprocessing.")
         for idx in range(num_runs):
-            if idx==0:
+            # if idx==0:
             #     tr = load_trajectory(fname)
             #     tr.v_idx = idx
             #     crun = tr.v_crun
@@ -190,6 +187,6 @@ if __name__ == "__main__":
             #     with open("this2.p", "wb") as pfile:
             #         pickle.dump((xx,yy),pfile)
             #     # np.save((xx.t,xx.i), 'this.npy')
-                default_analysis_figure(idx)
+            default_analysis_figure(idx)
     
         

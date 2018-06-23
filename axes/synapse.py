@@ -1,17 +1,35 @@
 
 import numpy as np
-from scipy.stats import lognorm
+from scipy.stats import norm, lognorm
 #from decimal import Decimal
 
 from brian2.units import mV, ms, second
 
 
-# def synapse_weight_distribution(ax, tr, crun='run_00000000', bins=50):
-#     df = tr.crun.SynEE_a
-#     bins = np.linspace(0, tr.amax, num=bins)
-#     for i,t in enumerate(df.t):
-#         ax.hist(np.nan_to_num(df.a[:,i].flatten()), bins=bins)
-#     ax.set_title('Synaptic Weight Distribution')
+
+
+def n_active_synapses(ax, tr, crun='run_00000000'):
+
+    df = tr.crun.SynEE_a
+
+    active_at_t = np.sum(df['syn_active'], axis=0)
+    all_at_t = np.shape(df['syn_active'])[0]
+
+    assert all_at_t == tr.N_e*(tr.N_e-1)
+
+    ax.plot(df.t, active_at_t/all_at_t, lw=2)
+
+    # ax.set_title('E'+r'$\to$'+'E weights at t=\SI{'+ \
+    #              str(df.t[tstep])+'}{s}')
+
+    ax.set_xlabel('time [s]')
+    ax.set_ylabel('fraction of synapses active')
+    
+    ax.spines['right'].set_visible(False)
+    ax.spines['top'].set_visible(False)
+    ax.yaxis.set_ticks_position('left')
+    ax.xaxis.set_ticks_position('bottom')
+
 
 
 def weight_distribution_t(ax, tr, crun='run_00000000', bins=50,
@@ -24,60 +42,55 @@ def weight_distribution_t(ax, tr, crun='run_00000000', bins=50,
 
     active_weight_at_t = weight_at_t[states_at_t==1]
 
-    # data = df['a'][:,tstep]
-    # xdata = data
-    # print(xdata)
-    # data = data[df['syn_active'][:,tstep]==1]
-
-    # print(data)
-
-    # if low_bound!=-1:
-    #     data = data[data>low_bound]
-    
-    # print('max: ', np.max(data), '\t min: ', np.min(data))
-    # data = data[data>tr.prn_thrshld]
-
-    # try:
-    #     amax = np.max(data)
-    # except ValueError:
-    #     amax = 4*tr.a_insert
-    # ax.hist(data, bins=np.linspace(tr.prn_thrshld, 4*tr.a_insert, bins))
-
     ax.hist(active_weight_at_t, bins=bins)
     
-    # ax.text(0.50, 0.95,
-    #         r'$a_{\text{max}}$='+'%.2E' % Decimal(tr.amax) + '\n' + \
-    #         'prn=' + '%.2E' % Decimal(tr.prn_thrshld) +'\n' +\
-    #         'ins=' + '%.2E' % Decimal(tr.a_insert),
-    #         horizontalalignment='left',
-    #         verticalalignment='top',
-    #         bbox={'boxstyle': 'square, pad=0.3', 'facecolor':'white',
-    #               'alpha':1, 'edgecolor':'none'},
-    #         transform = ax.transAxes)
-            
-    # ax.axvline(tr.a_insert, color='red')
-    # ax.axvline(tr.prn_thrshld, color='red')
-
-    # text, textcol = 'inactive', 'red'
-    # if bool(tr.scl_active):
-    #     text, textcol = 'active', 'green'
-    # if tstep==0:
-    #     ax.text(0.02, 0.95,
-    #             'scl ' + text, color=textcol, 
-    #             horizontalalignment='left',
-    #             verticalalignment='top',
-    #             bbox={'boxstyle': 'square, pad=0.3', 'facecolor':'white',
-    #                   'alpha':1, 'edgecolor':'none'},
-    #             transform = ax.transAxes)        
-
-    ax.set_title('synEE Weights at t=\SI{'+ \
+    ax.set_title('E'+r'$\to$'+'E weights at t=\SI{'+ \
                  str(df.t[tstep])+'}{s}')
+
+    ax.set_xlabel('synaptic weight')
+    
+    ax.spines['right'].set_visible(False)
+    ax.spines['top'].set_visible(False)
+    ax.yaxis.set_ticks_position('left')
+    ax.xaxis.set_ticks_position('bottom')
+
+
+
+def weight_distribution_log_t(ax, tr, crun='run_00000000', bins=50,
+                              tstep=0, low_bound=-1, fit=True):
+
+    df = tr.crun.SynEE_a
+
+    weight_at_t = df['a'][:,tstep]
+    states_at_t = df['syn_active'][:,tstep]
+
+    active_weight_at_t = weight_at_t[states_at_t==1]
+
+    log_weights = np.log(active_weight_at_t)
+    
+    ax.hist(log_weights, bins=bins, density=True)
+
+    if fit:
+        floc, fscale = norm.fit(log_weights)
+        f_rv = norm(loc=floc, scale=fscale)
+        xs = np.linspace(start=np.min(log_weights),
+                         stop=np.max(log_weights),
+                         num = 1000)
+        ax.plot(xs, f_rv.pdf(xs), lw=2, color='red',
+                linestyle='-')
+    
+    ax.set_title('E'+r'$\to$'+'E weights at t=\SI{'+ \
+                 str(df.t[tstep])+'}{s}')
+
+    ax.set_xlabel('log of synaptic weight')
 
     ax.spines['right'].set_visible(False)
     ax.spines['top'].set_visible(False)
     ax.yaxis.set_ticks_position('left')
     ax.xaxis.set_ticks_position('bottom')
 
+
+    
 
 def synapse_weight_distribution_log_t(ax, tr, crun='run_00000000',
                                       bins=30, a_min=-1, a_max=-1,
@@ -558,73 +571,3 @@ def membrane_threshold_traces(ax, tr, crun='run_00000000', tmax=-1):
    
     
         
-def print_membrane_params(ax, tr, crun='run_00000000'):
-    ax.axis('off')
-    ax.text(0.0, 1.0,
-            '$V_t^e=$\SI{'+str(tr.Vt_e/mV)+'}{mV}' + \
-            '\n$V_t^i=$\SI{'+str(tr.Vt_i/mV)+'}{mV}\n' +\
-            r'$\eta_{\text{IP}}=$\SI{' +\
-            '%.2E' % Decimal(tr.eta_ip/(mV*ms))+'}{mV ms}'+\
-            '\n'+r'$\Delta_t^{\mathrm{it}}$='+str(tr.it_dt/ms)+' ms',
-            horizontalalignment='left',
-            verticalalignment='top',
-            bbox={'boxstyle': 'square, pad=0.3', 'facecolor':'white',
-                  'alpha':1, 'edgecolor':'none'},
-            transform = ax.transAxes)
-
-def print_netw_params(ax, tr, crun='run_00000000'):
-    ax.axis('off')
-    ax.text(0.0, 1.0,
-            '$N_e$=' +str(int(tr.N_e)) + ', $N_i$=%d' %(int(tr.N_i)) +\
-            ', T=%.2f s' %(tr.T/second) +
-            '\n$\sigma$=$\sqrt{\mathrm{' +\
-            '%.2E' % Decimal((tr.sigma/mV)**2)+'}}$ mV' +\
-            '\n $'+r'\tau'+'$=\SI{%.2f}{ms}' %(tr.tau/ms) +\
-            '\n$E_l$= \SI{%.0f}{mV}' % (tr.El/mV) +\
-            '$, E_e$= \SI{%.0f}{mV}' % (tr.Ee/mV) +\
-            '$, E_i$= \SI{%.0f}{mV}' % (tr.Ei/mV) +\
-            '\n $'+r'\tau_e'+'$=\SI{%.2f}{ms}' % (tr.tau_e/ms) +\
-            ', $'+r'\tau_i'+'$=\SI{%.2f}{ms}' % (tr.tau_i/ms) + \
-            '\n $V^r_{e}$=\SI{%.0f}{mV}' % (tr.Vr_e/mV) +\
-            ', $V^r_{i}$=\SI{%.0f}{mV}' % (tr.Vr_i/mV) +\
-            '\n $V^T_{e}$=\SI{%.0f}{mV}' % (tr.Vt_e/mV) +\
-            ', $V^T_{i}$=\SI{%.0f}{mV}' % (tr.Vt_i/mV) +\
-            '\n $p_{ee}$ = %.2f' % (tr.p_ee) +\
-            ', $p_{ie}$ = %.2f' % (tr.p_ie) +\
-            ', $p_{ei}$ = %.2f' % (tr.p_ei) +\
-            ', $p_{ii}$ = %.2f' % (tr.p_ii) +\
-            '\n $a_{ie}$ = %.2f $a_{\mathrm{scale}}$' %(tr.a_ie/tr.ascale) +\
-            ', $a_{ei}$ = %.2f $a_{\mathrm{scale}}$' % (tr.a_ei/tr.ascale) +\
-            ', $a_{ii}$ = %.2f $a_{\mathrm{scale}}$' % (tr.a_ii/tr.ascale),
-            horizontalalignment='left',
-            verticalalignment='top',
-            linespacing = 1.95,
-            bbox={'boxstyle': 'square, pad=0.3', 'facecolor':'white',
-                  'alpha':1, 'edgecolor':'none'},
-            transform = ax.transAxes)
-
-def print_stdp_params(ax, tr, crun='run_00000000'):
-    ax.axis('off')
-    ax.text(0.0, 1.0,
-            r'$\tau'+'_{\mathrm{pre}}$= \SI{%.2f}{ms}' %(tr.taupre/ms) +\
-            r', $\tau'+'_{\mathrm{post}}$= \SI{%.2f}{ms}' %(tr.taupost/ms) +\
-            '\n $A_{\mathrm{plus}}$= $%f\, a_{\mathrm{scale}}$' %(tr.Aplus/tr.ascale) + \
-            '\n $A_{\mathrm{minus}}$= $%f\, a_{\mathrm{scale}}$' %(tr.Aminus/tr.ascale) + \
-            '\n $a_{\mathrm{scale}}$ = %.4E' %(Decimal(tr.ascale)) +\
-            '\n------------------------------------------' +\
-            '\n $a_{\mathrm{TotalMax}}$ = $%.4f \, a_{\mathrm{scale}}$' %(tr.ATotalMax/tr.ascale) +\
-            '\n $\Delta_{\mathrm{scaling}}$ = \SI{%.2f}{ms}' %(tr.dt_synEE_scaling/ms) +\
-            '\n $\eta_{\mathrm{scaling}}$ = %.4f' %(tr.eta_scaling) +\
-            '\n------------------------------------------' +\
-            '\n $a_{\mathrm{insert}}$ = $%.2f\, a_\mathrm{scale}$' %(tr.a_insert/tr.ascale) +\
-            ', $a_{\mathrm{thrshld}}$ = $%.2f\, a_\mathrm{scale}$' %(tr.prn_thrshld/tr.ascale) +\
-            '\n $\Delta_{\mathrm{strct}}$ = \SI{%.2f}{ms}' %(tr.strct_dt/ms) +\
-            ', $p_{\mathrm{insert}}$ = %.4f' %(tr.insert_P),
-            horizontalalignment='left',
-            verticalalignment='top',
-            linespacing = 1.75,
-            bbox={'boxstyle': 'square, pad=0.3', 'facecolor':'white',
-                  'alpha':1, 'edgecolor':'none'},
-            transform = ax.transAxes)
-
-
